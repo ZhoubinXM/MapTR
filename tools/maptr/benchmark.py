@@ -5,8 +5,10 @@ import torch
 from mmcv import Config
 from mmcv.parallel import MMDataParallel
 from mmcv.runner import load_checkpoint, wrap_fp16_model
+from mmcv.cnn.utils.flops_counter import *
 import sys
-import os 
+import os
+
 sys.path.append('.')
 from projects.mmdet3d_plugin.datasets.builder import build_dataloader
 from projects.mmdet3d_plugin.datasets import custom_build_dataset
@@ -20,8 +22,9 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--checkpoint', default=None, help='checkpoint file')
     parser.add_argument('--samples', default=2000, help='samples to benchmark')
-    parser.add_argument(
-        '--log-interval', default=50, help='interval of logging')
+    parser.add_argument('--log-interval',
+                        default=50,
+                        help='interval of logging')
     parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
@@ -68,18 +71,19 @@ def main():
     # TODO: support multiple images per gpu (only minor changes are needed)
     print(cfg.data.test)
     dataset = custom_build_dataset(cfg.data.test)
-    data_loader = build_dataloader(
-        dataset,
-        samples_per_gpu=1,
-        workers_per_gpu=cfg.data.workers_per_gpu,
-        dist=False,
-        shuffle=False)
+    data_loader = build_dataloader(dataset,
+                                   samples_per_gpu=1,
+                                   workers_per_gpu=cfg.data.workers_per_gpu,
+                                   dist=False,
+                                   shuffle=False)
 
     # build the model and load checkpoint
     cfg.model.train_cfg = None
     model = build_detector(cfg.model, test_cfg=cfg.get('test_cfg'))
-    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print('***********number of params:', n_parameters)
+    n_parameters = sum(p.numel() for p in model.parameters()
+                       if p.requires_grad)
+    print('***********\nnumber of params:', n_parameters, " / ",
+          params_to_string(n_parameters))
 
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:

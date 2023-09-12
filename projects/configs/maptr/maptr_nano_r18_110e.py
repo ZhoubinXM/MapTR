@@ -73,12 +73,12 @@ model = dict(
         relu_before_extra_convs=True),
     pts_bbox_head=dict(
         type='MapTRHead',
-        bev_h=bev_h_,
-        bev_w=bev_w_,
+        bev_h=bev_h_,  # 80
+        bev_w=bev_w_,  # 40
         num_query=900,
         num_vec=100,
-        num_pts_per_vec=fixed_ptsnum_per_pred_line, # one bbox
-        num_pts_per_gt_vec=fixed_ptsnum_per_gt_line,
+        num_pts_per_vec=fixed_ptsnum_per_pred_line, # one vector 20
+        num_pts_per_gt_vec=fixed_ptsnum_per_gt_line, # 20
         dir_interval=1,
         query_embed_type='instance_pts',
         transform_method='minmax',
@@ -123,7 +123,7 @@ model = dict(
                             embed_dims=_dim_,
                         )
                     ],
-                    feedforward_channels=_ffn_dim_,
+                    feedforward_channels=_ffn_dim_,  # 128
                     ffn_dropout=0.1,
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm'))),
@@ -160,7 +160,7 @@ model = dict(
             num_classes=num_map_classes),
         positional_encoding=dict(
             type='LearnedPositionalEncoding',
-            num_feats=_pos_dim_,
+            num_feats=_pos_dim_,  # 128
             row_num_embed=bev_h_,
             col_num_embed=bev_w_,
             ),
@@ -193,7 +193,7 @@ model = dict(
             pc_range=point_cloud_range))))
 
 dataset_type = 'CustomNuScenesLocalMapDataset'
-data_root = 'data/nuscenes/'
+data_root = 'data/nuscenes/trainval/'
 file_client_args = dict(backend='disk')
 
 

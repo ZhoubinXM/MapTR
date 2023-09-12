@@ -107,28 +107,28 @@ class MapTRHead(DETRHead):
 
         self.bbox_coder = build_bbox_coder(bbox_coder)
         self.pc_range = self.bbox_coder.pc_range
-        self.real_w = self.pc_range[3] - self.pc_range[0]
-        self.real_h = self.pc_range[4] - self.pc_range[1]
-        self.num_cls_fcs = num_cls_fcs - 1
+        self.real_w = self.pc_range[3] - self.pc_range[0]  # 30m
+        self.real_h = self.pc_range[4] - self.pc_range[1]  # 60m
+        self.num_cls_fcs = num_cls_fcs - 1  # 1
         
 
         self.query_embed_type = query_embed_type
         self.transform_method = transform_method
         self.gt_shift_pts_pattern = gt_shift_pts_pattern
-        num_query = num_vec * num_pts_per_vec
-        self.num_query = num_query
-        self.num_vec = num_vec
-        self.num_pts_per_vec = num_pts_per_vec
-        self.num_pts_per_gt_vec = num_pts_per_gt_vec
-        self.dir_interval = dir_interval
+        num_query = num_vec * num_pts_per_vec  # 100 * 20
+        self.num_query = num_query  # 900
+        self.num_vec = num_vec  # 100
+        self.num_pts_per_vec = num_pts_per_vec  # 20
+        self.num_pts_per_gt_vec = num_pts_per_gt_vec  # 20
+        self.dir_interval = dir_interval  # 1
         
         
         super(MapTRHead, self).__init__(
             *args, transformer=transformer, **kwargs)
         self.code_weights = nn.Parameter(torch.tensor(
-            self.code_weights, requires_grad=False), requires_grad=False)
-        self.loss_pts = build_loss(loss_pts)
-        self.loss_dir = build_loss(loss_dir)
+            self.code_weights, requires_grad=False), requires_grad=False)  # [1, * 4]
+        self.loss_pts = build_loss(loss_pts)  # PtsL1Loss
+        self.loss_dir = build_loss(loss_dir)  # PtsDirCosLoss
         num_query = num_vec * num_pts_per_vec
         self.num_query = num_query
         self.num_vec = num_vec
@@ -162,10 +162,10 @@ class MapTRHead(DETRHead):
         # last reg_branch is used to generate proposal from
         # encode feature map when as_two_stage is True.
         num_pred = (self.transformer.decoder.num_layers + 1) if \
-            self.as_two_stage else self.transformer.decoder.num_layers
+            self.as_two_stage else self.transformer.decoder.num_layers  # 2
 
         if self.with_box_refine:
-            self.cls_branches = _get_clones(fc_cls, num_pred)
+            self.cls_branches = _get_clones(fc_cls, num_pred)   # mlp * num_pred
             self.reg_branches = _get_clones(reg_branch, num_pred)
         else:
             self.cls_branches = nn.ModuleList(
@@ -176,7 +176,7 @@ class MapTRHead(DETRHead):
         if not self.as_two_stage:
             if self.bev_encoder_type == 'BEVFormerEncoder':
                 self.bev_embedding = nn.Embedding(
-                    self.bev_h * self.bev_w, self.embed_dims)
+                    self.bev_h * self.bev_w, self.embed_dims)  # [80*40, ]
             else:
                 self.bev_embedding = None
             if self.query_embed_type == 'all_pts':
